@@ -107,6 +107,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__0__;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.defaultMediaConstraints = exports.responseTimeout = exports.uuidKey = exports.messages = void 0;
 exports.messages = {
     park: { reqid: 1, command: 'callpark' },
     startRecord: { reqid: 2, command: 'startcallrecord' },
@@ -136,10 +137,11 @@ exports.defaultMediaConstraints = {
 "use strict";
 
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
         function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
@@ -170,8 +172,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var _this = this;
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.extend = exports.delay = exports.uuid = void 0;
 exports.uuid = function () {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
         var r = (Math.random() * 16) | 0;
@@ -179,7 +181,7 @@ exports.uuid = function () {
         return v.toString(16);
     });
 };
-exports.delay = function (ms) { return __awaiter(_this, void 0, void 0, function () { return __generator(this, function (_a) {
+exports.delay = function (ms) { return __awaiter(void 0, void 0, void 0, function () { return __generator(this, function (_a) {
     return [2 /*return*/, new Promise(function (resolve) { return setTimeout(resolve, ms); })];
 }); }); };
 exports.extend = function (dst, src) {
@@ -194,17 +196,18 @@ exports.extend = function (dst, src) {
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
+
 /*
  * @Author: Elias Sun(elias.sun@ringcentral.com)
  * @Date: Dec. 15, 2018
  * Copyright © RingCentral. All rights reserved.
  */
-
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
         function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
@@ -236,6 +239,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.MediaStreams = exports.MediaStreamsImpl = exports.RTPReport = exports.Browsers = void 0;
 /**
  * @Supported browsers: @Chrome  @Firefox @Safari
  *
@@ -320,14 +324,14 @@ var MediaStreams = /** @class */ (function () {
         set: function (statsCallback) {
             this.mediaStreamsImpl.onRTPStat = statsCallback;
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     Object.defineProperty(MediaStreams.prototype, "onMediaConnectionStateChange", {
         set: function (stateChangeCallBack) {
             this.mediaStreamsImpl.onMediaConnectionStateChange = stateChangeCallBack;
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     return MediaStreams;
@@ -400,7 +404,7 @@ var MediaStreamsImpl = /** @class */ (function () {
             return;
         }
         var rtpStatInSession = this.session.listeners('rtpStat');
-        if (!this.session.onRTPStat && !this.onRTPStat && !(rtpStatInSession.length > 0)) {
+        if (!this.session.onRTPStat && !this.onRTPStat && rtpStatInSession.length <= 0) {
             this.rcWPLoge(this.ktag, 'No callback to accept receive media report. usage: session.on("rtpStat") = function(report) or session.onRTPStat = function(report) or set a mediaCallback as a paramter');
             return;
         }
@@ -416,7 +420,7 @@ var MediaStreamsImpl = /** @class */ (function () {
         get: function () {
             return this.ktag;
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     MediaStreamsImpl.prototype.onPeerConnectionStateChange = function (sessionDescriptionHandler) {
@@ -538,6 +542,15 @@ var MediaStreamsImpl = /** @class */ (function () {
                             }
                         });
                         break;
+                    case 'media-source':
+                        reports.outboundRtpReport['rtpLocalAudioLevel'] = report.audioLevel ? report.audioLevel : 0;
+                        break;
+                    case 'track':
+                        if (!report.remoteSource) {
+                            break;
+                        }
+                        reports.inboundRtpReport['rtpRemoteAudioLevel'] = report.audioLevel ? report.audioLevel : 0;
+                        break;
                     default:
                         break;
                 }
@@ -627,11 +640,23 @@ exports.MediaStreamsImpl = MediaStreamsImpl;
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -663,15 +688,30 @@ var WebPhone = /** @class */ (function () {
             (app_client_os ? app_client_os : '') +
             (" RCWEBPHONE/" + version);
         var modifiers = options.modifiers || [];
-        modifiers.push(sip_js_1.Web.Modifiers.stripG722);
-        modifiers.push(sip_js_1.Web.Modifiers.stripTcpCandidates);
+        if (options.enableDefaultModifiers !== false) {
+            modifiers.push(sip_js_1.Web.Modifiers.stripG722);
+            modifiers.push(sip_js_1.Web.Modifiers.stripTcpCandidates);
+        }
         if (options.enableMidLinesInSDP) {
             modifiers.push(sip_js_1.Web.Modifiers.addMidLines);
         }
+        var sdpSemantics = 'unified-plan';
+        if (options.enablePlanB) {
+            sdpSemantics = 'plan-b';
+        }
+        var stunServerArr = options.stunServers || this.sipInfo.stunServers || ['stun.l.google.com:19302'];
+        var iceServers = [];
+        stunServerArr.forEach(function (addr) {
+            addr = !/^(stun:)/.test(addr) ? 'stun:' + addr : addr;
+            iceServers.push({ urls: addr });
+        });
         var sessionDescriptionHandlerFactoryOptions = options.sessionDescriptionHandlerFactoryOptions || {
             peerConnectionOptions: {
                 iceCheckingTimeout: this.sipInfo.iceCheckingTimeout || this.sipInfo.iceGatheringTimeout || 500,
-                rtcConfiguration: {}
+                rtcConfiguration: {
+                    sdpSemantics: sdpSemantics,
+                    iceServers: iceServers
+                }
             },
             constraints: options.mediaConstraints || constants_1.defaultMediaConstraints,
             modifiers: modifiers
@@ -721,8 +761,7 @@ var WebPhone = /** @class */ (function () {
             },
             authorizationUser: this.sipInfo.authorizationId,
             password: this.sipInfo.password,
-            stunServers: this.sipInfo.stunServers || ['stun:74.125.194.127:19302'],
-            turnServers: [],
+            // turnServers: [],
             log: {
                 level: options.logLevel || 1,
                 builtinEnabled: typeof options.builtinEnabled === 'undefined' ? true : options.builtinEnabled,
@@ -734,13 +773,17 @@ var WebPhone = /** @class */ (function () {
             userAgentString: userAgentString,
             sessionDescriptionHandlerFactoryOptions: sessionDescriptionHandlerFactoryOptions,
             sessionDescriptionHandlerFactory: sessionDescriptionHandlerFactory,
-            allowLegacyNotifications: true
+            allowLegacyNotifications: true,
+            registerOptions: {
+                instanceId: options.instanceId || undefined,
+                regId: options.regId || undefined
+            }
         };
         options.sipErrorCodes = sipErrorCodes;
         options.switchBackInterval = this.sipInfo.switchBackInterval;
         this.userAgent = userAgent_1.patchUserAgent(new sip_js_1.UA(configuration), this.sipInfo, options, id);
     }
-    WebPhone.version = '0.7.7';
+    WebPhone.version = '0.8.2';
     WebPhone.uuid = utils_1.uuid;
     WebPhone.delay = utils_1.delay;
     WebPhone.extend = utils_1.extend;
@@ -768,7 +811,15 @@ var __assign = (this && this.__assign) || function () {
     };
     return __assign.apply(this, arguments);
 };
+var __spreadArrays = (this && this.__spreadArrays) || function () {
+    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
+    for (var r = Array(s), k = 0, i = 0; i < il; i++)
+        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+            r[k] = a[j];
+    return r;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.patchUserAgent = void 0;
 var audioHelper_1 = __webpack_require__(6);
 var session_1 = __webpack_require__(7);
 var sipTransportConstructor_1 = __webpack_require__(11);
@@ -811,7 +862,6 @@ exports.patchUserAgent = function (userAgent, sipInfo, options, id) {
         })
             .catch(function (error) {
             session.logger.error('failed to send receive confirmation via SIP MESSAGE due to ' + error);
-            throw error;
         });
     });
     userAgent.on('registrationFailed', function (e) {
@@ -880,12 +930,12 @@ function sendMessage(to, messageData) {
 /*--------------------------------------------------------------------------------------------------------------------*/
 function register(options) {
     if (options === void 0) { options = {}; }
-    return this.__register.call(this, __assign({}, options, { extraHeaders: (options.extraHeaders || []).concat(this.defaultHeaders) }));
+    return this.__register.call(this, __assign(__assign({}, options), { extraHeaders: __spreadArrays((options.extraHeaders || []), this.defaultHeaders) }));
 }
 /*--------------------------------------------------------------------------------------------------------------------*/
 function unregister(options) {
     if (options === void 0) { options = {}; }
-    return this.__unregister.call(this, __assign({}, options, { extraHeaders: (options.extraHeaders || []).concat(this.defaultHeaders) }));
+    return this.__unregister.call(this, __assign(__assign({}, options), { extraHeaders: __spreadArrays((options.extraHeaders || []), this.defaultHeaders) }));
 }
 function invite(number, options) {
     if (options === void 0) { options = {}; }
@@ -912,6 +962,7 @@ function invite(number, options) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.AudioHelper = void 0;
 var AudioHelper = /** @class */ (function () {
     function AudioHelper(options) {
         if (options === void 0) { options = {}; }
@@ -983,10 +1034,11 @@ exports.AudioHelper = AudioHelper;
 "use strict";
 
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
         function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
@@ -1017,7 +1069,15 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __spreadArrays = (this && this.__spreadArrays) || function () {
+    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
+    for (var r = Array(s), k = 0, i = 0; i < il; i++)
+        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+            r[k] = a[j];
+    return r;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.patchIncomingSession = exports.patchSession = void 0;
 var sip_js_1 = __webpack_require__(0);
 var constants_1 = __webpack_require__(1);
 var qos_1 = __webpack_require__(8);
@@ -1056,6 +1116,9 @@ exports.patchSession = function (session) {
     session.media = session.ua.media; //TODO Remove
     session.addTrack = addTrack.bind(session);
     session.stopMediaStats = stopMediaStats.bind(session);
+    session.getIncomingInfoContent = getIncomingInfoContent.bind(session);
+    session.sendMoveResponse = sendMoveResponse.bind(session);
+    session._sendReinvite = sendReinvite.bind(session);
     session.on('replaced', exports.patchSession);
     // Audio
     session.on('progress', function (incomingResponse) {
@@ -1172,6 +1235,7 @@ var parseRcHeader = function (session) {
             utils_1.extend(session.rcHeaders, {
                 srvLvl: bdyNode.getAttribute('SrvLvl'),
                 srvLvlExt: bdyNode.getAttribute('SrvLvlExt'),
+                nm: bdyNode.getAttribute('Nm'),
                 toNm: bdyNode.getAttribute('ToNm')
             });
         }
@@ -1184,6 +1248,7 @@ var parseRcHeader = function (session) {
         }
     }
 };
+var mediaCheckTimer = 2000;
 /*--------------------------------------------------------------------------------------------------------------------*/
 function canUseRCMCallControl() {
     return !!this.rcHeaders;
@@ -1217,7 +1282,7 @@ function sendSessionMessage(options) {
     return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_a) {
             if (!this.rcHeaders) {
-                throw new Error("Can't send SIP MESSAGE related to session: no RC headers available");
+                this.logger.error("Can't send SIP MESSAGE related to session: no RC headers available");
             }
             return [2 /*return*/, this.ua.sendMessage(this.rcHeaders.from, this.createSessionMessage(options))];
         });
@@ -1351,6 +1416,7 @@ function setRecord(session, flag) {
     });
 }
 /*--------------------------------------------------------------------------------------------------------------------*/
+//TODO: Convert to toggleHold() and deprecate this function
 function setLocalHold(session, flag) {
     return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_a) {
@@ -1371,11 +1437,50 @@ function setLocalHold(session, flag) {
     });
 }
 /*--------------------------------------------------------------------------------------------------------------------*/
+function getIncomingInfoContent(request) {
+    if (!request || !request.body) {
+        return {};
+    }
+    var ret = {};
+    try {
+        ret = JSON.parse(request.body);
+    }
+    catch (e) {
+        return {};
+    }
+    return ret;
+}
+function sendMoveResponse(reqId, code, description, options) {
+    if (options === void 0) { options = {}; }
+    var extraHeaders = __spreadArrays((options.extraHeaders || []), this.ua.defaultHeaders, ['Content-Type: application/json;charset=utf-8']);
+    this.sendRequest(sip_js_1.C.INFO, {
+        body: JSON.stringify({ response: {
+                reqId: reqId,
+                command: 'move',
+                result: {
+                    code: code,
+                    description: description
+                }
+            }
+        }),
+        extraHeaders: extraHeaders
+    });
+}
 function receiveRequest(request) {
+    var _a, _b, _c;
     switch (request.method) {
         case sip_js_1.C.INFO:
+            // For the Move2RCV request from server
+            var content = this.getIncomingInfoContent(request);
+            if (((_a = content === null || content === void 0 ? void 0 : content.request) === null || _a === void 0 ? void 0 : _a.reqId) && ((_b = content === null || content === void 0 ? void 0 : content.request) === null || _b === void 0 ? void 0 : _b.command) === 'move'
+                && ((_c = content === null || content === void 0 ? void 0 : content.request) === null || _c === void 0 ? void 0 : _c.target) === 'rcv') {
+                request.reply(200);
+                this.emit('moveToRcv', content.request);
+                return this;
+            }
+            // For other SIP INFO from server
             this.emit('RC_SIP_INFO', request);
-            //SIP.js does not support application/json content type, so we monkey override its behaviour in this case
+            // SIP.js does not support application/json content type, so we monkey override its behaviour in this case
             if (this.status === sip_js_1.Session.C.STATUS_CONFIRMED || this.status === sip_js_1.Session.C.STATUS_WAITING_FOR_ACK) {
                 var contentType = request.getHeader('content-type');
                 if (contentType.match(/^application\/json/i)) {
@@ -1431,17 +1536,123 @@ function dtmf(dtmf, duration, interToneGap) {
     throw new Error('Send DTMF failed: ' + (!dtmfSender ? 'no sender' : sender));
 }
 /*--------------------------------------------------------------------------------------------------------------------*/
+function sendReinvite(options) {
+    if (options === void 0) { options = {}; }
+    return __awaiter(this, void 0, void 0, function () {
+        var description_1, result, e_1;
+        var _this = this;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    if (this.pendingReinvite) {
+                        throw new Error('Reinvite in progress. Please wait until complete, then try again.');
+                    }
+                    if (!this.sessionDescriptionHandler) {
+                        throw new Error("No SessionDescriptionHandler, can't send reinvite..");
+                    }
+                    this.pendingReinvite = true;
+                    options.modifiers = options.modifiers || [];
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 5, , 6]);
+                    return [4 /*yield*/, this.sessionDescriptionHandler.getDescription(options.sessionDescriptionHandlerOptions, options.modifiers)];
+                case 2:
+                    description_1 = _a.sent();
+                    return [4 /*yield*/, new Promise(function (resolve, reject) {
+                            _this.sendRequest(sip_js_1.C.INVITE, {
+                                body: description_1,
+                                receiveResponse: function (response) {
+                                    if (response.statusCode === 200)
+                                        resolve(response);
+                                }
+                            });
+                        })];
+                case 3:
+                    result = _a.sent();
+                    return [4 /*yield*/, this.receiveReinviteResponse(result)];
+                case 4:
+                    _a.sent();
+                    return [2 /*return*/, result];
+                case 5:
+                    e_1 = _a.sent();
+                    this.pendingReinvite = false;
+                    throw new Error('Reinvite Failed with the reason ' + e_1.message);
+                case 6: return [2 /*return*/];
+            }
+        });
+    });
+}
+/*--------------------------------------------------------------------------------------------------------------------*/
 function hold() {
-    this.stopMediaStats();
-    return setLocalHold(this, true);
+    return __awaiter(this, void 0, void 0, function () {
+        var options, response, e_2;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    if (this.status !== sip_js_1.Session.C.STATUS_WAITING_FOR_ACK && this.status !== sip_js_1.Session.C.STATUS_CONFIRMED) {
+                        throw new sip_js_1.Exceptions.InvalidStateError(this.status);
+                    }
+                    if (this.localHold) {
+                        throw new Error('Session already on hold');
+                    }
+                    this.stopMediaStats();
+                    options = {
+                        modifiers: []
+                    };
+                    options.modifiers.push(this.sessionDescriptionHandler.holdModifier);
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 3, , 4]);
+                    this.logger.log('Hold Initiated');
+                    return [4 /*yield*/, this._sendReinvite(options)];
+                case 2:
+                    response = _a.sent();
+                    this.localHold = (response.statusCode === 200 && (this.sessionDescriptionHandler.getDirection() === 'sendonly'));
+                    this.logger.log('Hold completed, localhold is set to ' + this.localHold);
+                    return [3 /*break*/, 4];
+                case 3:
+                    e_2 = _a.sent();
+                    throw new Error('Hold could not be completed');
+                case 4: return [2 /*return*/];
+            }
+        });
+    });
 }
 /*--------------------------------------------------------------------------------------------------------------------*/
 function unhold() {
-    return setLocalHold(this, false);
+    return __awaiter(this, void 0, void 0, function () {
+        var response, e_3;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    if (this.status !== sip_js_1.Session.C.STATUS_WAITING_FOR_ACK && this.status !== sip_js_1.Session.C.STATUS_CONFIRMED) {
+                        throw new sip_js_1.Exceptions.InvalidStateError(this.status);
+                    }
+                    if (!this.localHold) {
+                        throw new Error('Session not on hold, cannot unhold');
+                    }
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 3, , 4]);
+                    this.logger.log('Unhold Initiated');
+                    return [4 /*yield*/, this._sendReinvite()];
+                case 2:
+                    response = _a.sent();
+                    this.localHold = response.statusCode === 200 && this.sessionDescriptionHandler.getDirection() === 'sendonly';
+                    this.logger.log('Unhold completed, localhold is set to ' + this.localHold);
+                    return [3 /*break*/, 4];
+                case 3:
+                    e_3 = _a.sent();
+                    throw new Error('Unhold could not be completed');
+                case 4: return [2 /*return*/];
+            }
+        });
+    });
 }
 /*--------------------------------------------------------------------------------------------------------------------*/
 function blindTransfer(target, options) {
     if (options === void 0) { options = {}; }
+    this.logger.log('Call transfer initiated');
     return Promise.resolve(this.refer(target, options));
 }
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -1453,19 +1664,19 @@ function warmTransfer(target, transferOptions) {
                 case 0: return [4 /*yield*/, (this.localHold ? Promise.resolve(null) : this.hold())];
                 case 1:
                     _a.sent();
-                    return [4 /*yield*/, utils_1.delay(300)];
-                case 2:
-                    _a.sent();
                     transferOptions.extraHeaders = (transferOptions.extraHeaders || []).concat(this.ua.defaultHeaders);
-                    return [2 /*return*/, this.refer(target, transferOptions)];
+                    this.logger.log('Completing warm transfer');
+                    return [2 /*return*/, Promise.resolve(this.refer(target, transferOptions))];
             }
         });
     });
 }
 /*--------------------------------------------------------------------------------------------------------------------*/
 function transfer(target, options) {
+    if (options === void 0) { options = {}; }
     return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_a) {
+            options.extraHeaders = (options.extraHeaders || []).concat(this.ua.defaultHeaders);
             return [2 /*return*/, this.blindTransfer(target, options)];
         });
     });
@@ -1645,7 +1856,7 @@ function addTrack(remoteAudioEle, localAudioEle) {
             else if (!rtpReport_1.isNoAudio(report)) {
                 _this.noAudioReportCount = 0;
             }
-        }, 2000);
+        }, mediaCheckTimer);
     }
 }
 function stopMediaStats() {
@@ -1680,6 +1891,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.startQosStatsCollection = void 0;
 var getstats_1 = __importDefault(__webpack_require__(9));
 var formatFloat = function (input) { return parseFloat(input.toString()).toFixed(2); };
 exports.startQosStatsCollection = function (session) {
@@ -1745,7 +1957,7 @@ var publishQosStats = function (session, qosStatsObj, options) {
     var event = options.event || 'vq-rtcpxr';
     options.expires = 60;
     options.contentType = 'application/vq-rtcpxr';
-    options.extraHeaders = options.extraHeaders || [];
+    options.extraHeaders = (options.extraHeaders || []).concat(session.ua.defaultHeaders);
     options.extraHeaders.push('p-rc-client-info:' + 'cpuRC=0:0;cpuOS=0:0;netType=' + networkType + ';ram=0:0;effectiveType=' + effectiveType);
     var calculatedStatsObj = calculateStats(qosStatsObj);
     var body = createPublishBody(calculatedStatsObj);
@@ -1767,7 +1979,7 @@ var calculateNetworkUsage = function (qosStatsObj) {
 var calculateStats = function (qosStatsObj) {
     var rawNLR = (qosStatsObj.packetLost * 100) / (qosStatsObj.packetsReceived + qosStatsObj.packetLost) || 0;
     var rawJBN = qosStatsObj.totalIntervalCount > 0 ? qosStatsObj.totalSumJitter / qosStatsObj.totalIntervalCount : 0;
-    return __assign({}, qosStatsObj, { NLR: formatFloat(rawNLR), JBN: formatFloat(rawJBN), JDR: formatFloat(qosStatsObj.jitterBufferDiscardRate), MOSLQ: 0 //MOS Score
+    return __assign(__assign({}, qosStatsObj), { NLR: formatFloat(rawNLR), JBN: formatFloat(rawJBN), JDR: formatFloat(qosStatsObj.jitterBufferDiscardRate), MOSLQ: 0 //MOS Score
      });
 };
 var createPublishBody = function (calculatedStatsObj) {
@@ -1833,7 +2045,7 @@ var getQoSStatsTemplate = function () { return ({
 var addToMap = function (map, key) {
     var _a;
     if (map === void 0) { map = {}; }
-    return (__assign({}, map, (_a = {}, _a[key] = (key in map ? parseInt(map[key]) : 0) + 1, _a)));
+    return (__assign(__assign({}, map), (_a = {}, _a[key] = (key in map ? parseInt(map[key]) : 0) + 1, _a)));
 };
 var networkTypeMap;
 (function (networkTypeMap) {
@@ -1869,6 +2081,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__9__;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.isNoAudio = void 0;
 function isNoAudio(report) {
     if (!report.inboundRtpReport) {
         return true;
@@ -1891,10 +2104,11 @@ exports.isNoAudio = isNoAudio;
 "use strict";
 
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
         function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
@@ -1926,6 +2140,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.TransportConstructorWrapper = void 0;
 exports.TransportConstructorWrapper = function (SipTransportConstructor, webPhoneOptions) {
     return function (logger, options) {
         var transport = new SipTransportConstructor(logger, options);
@@ -2134,7 +2349,7 @@ function __afterWSConnected() {
 /* 12 */
 /***/ (function(module) {
 
-module.exports = {"name":"ringcentral-web-phone","version":"0.7.7","scripts":{"test":"npm run test:ut && npm run test:e2e","test:coverage":"cat .coverage/lcov.info | coveralls -v","test:e2e":"jest --config jest.config.e2e.js --runInBand","test:ut":"jest --config jest.config.ut.js","build":"npm run build:tsc && npm run build:webpack","build:tsc":"tsc","build:webpack":"cross-env NODE_ENV=production webpack --config webpack.config.js --progress --color","start":"webpack-dev-server --config webpack.config.js --progress --color","server":"http-server --port ${PORT:-8080}","watch":"npm-run-all --print-label --parallel \"build:** -- --watch\"","lint":"eslint --cache --cache-location node_modules/.cache/eslint --fix","lint:all":"npm run lint \"src/**/*.ts\" \"demo/**/*.js\"","lint:staged":"lint-staged"},"dependencies":{"getstats":"1.2.0","sip.js":"0.13.5","tsc":"1.20150623.0"},"devDependencies":{"@types/expect-puppeteer":"3.3.1","@types/jest":"24.0.15","@types/jest-environment-puppeteer":"4.0.0","@types/node":"12.0.8","bootstrap":"3.4.1","cache-loader":"4.0.0","copy-webpack-plugin":"5.1.1","coveralls":"3.0.4","cross-env":"5.2.0","dotenv":"8.0.0","eslint":"5.16.0","eslint-config-ringcentral-typescript":"1.0.0","html-webpack-plugin":"3.2.0","http-server":"0.11.1","husky":"2.4.1","istanbul-instrumenter-loader":"3.0.1","jest":"24.8.0","jest-puppeteer":"4.2.0","jquery":"3.4.1","lint-staged":"8.2.1","npm-run-all":"4.1.5","puppeteer":"1.18.0","ringcentral":"3.2.2","ts-jest":"24.0.2","ts-loader":"6.0.3","typescript":"3.5.2","uglifyjs-webpack-plugin":"2.1.3","webpack":"4.35.0","webpack-cli":"3.3.4","webpack-dev-server":"3.7.2"},"preferGlobal":false,"private":false,"main":"./lib/index.js","types":"./lib/index.d.ts","author":{"name":"RingCentral, Inc.","email":"devsupport@ringcentral.com"},"contributors":[{"name":"Kirill Konshin"},{"name":"Elias Sun"}],"repository":{"type":"git","url":"git://github.com/ringcentral/ringcentral-web-phone.git"},"bugs":{"url":"https://github.com/ringcentral/ringcentral-web-phone/issues"},"homepage":"https://github.com/ringcentral/ringcentral-web-phone","engines":{"node":">=0.10.36"},"license":"MIT"};
+module.exports = {"name":"ringcentral-web-phone","version":"0.8.2","scripts":{"test":"npm run test:ut && npm run test:e2e","test:coverage":"cat .coverage/lcov.info | coveralls -v","test:e2e":"jest --config jest.config.e2e.js --runInBand","test:ut":"jest --config jest.config.ut.js","build":"npm run build:tsc && npm run build:webpack","build:tsc":"tsc","build:webpack":"cross-env NODE_ENV=production webpack --config webpack.config.js --progress --color","start":"webpack-dev-server --config webpack.config.js --progress --color","server":"http-server --port ${PORT:-8080}","watch":"npm-run-all --print-label --parallel \"build:** -- --watch\"","lint":"eslint --cache --cache-location node_modules/.cache/eslint --fix","lint:all":"npm run lint \"src/**/*.ts\" \"demo/**/*.js\"","lint:staged":"lint-staged"},"dependencies":{"getstats":"1.2.0","sip.js":"0.13.5"},"devDependencies":{"@types/expect-puppeteer":"3.3.1","@types/jest":"24.0.15","@types/jest-environment-puppeteer":"4.0.0","@types/node":"12.0.8","bootstrap":"3.4.1","cache-loader":"4.0.0","copy-webpack-plugin":"5.0.3","coveralls":"3.0.4","cross-env":"5.2.0","dotenv":"8.0.0","eslint":"6.8.0","eslint-config-ringcentral-typescript":"3.0.0","html-webpack-plugin":"3.2.0","http-server":"0.11.1","husky":"2.4.1","istanbul-instrumenter-loader":"3.0.1","jest":"24.8.0","jest-puppeteer":"4.2.0","jquery":"3.4.1","lint-staged":"8.2.1","npm-run-all":"4.1.5","puppeteer":"1.18.0","ringcentral":"3.2.2","ts-jest":"24.0.2","ts-loader":"6.0.3","typescript":"3.9.2","uglifyjs-webpack-plugin":"2.1.3","webpack":"4.35.0","webpack-cli":"3.3.4","webpack-dev-server":"3.7.2"},"preferGlobal":false,"private":false,"main":"./lib/index.js","types":"./lib/index.d.ts","author":{"name":"RingCentral, Inc.","email":"devsupport@ringcentral.com"},"contributors":[{"name":"Kirill Konshin"},{"name":"Elias Sun"}],"repository":{"type":"git","url":"git://github.com/ringcentral/ringcentral-web-phone.git"},"bugs":{"url":"https://github.com/ringcentral/ringcentral-web-phone/issues"},"homepage":"https://github.com/ringcentral/ringcentral-web-phone","engines":{"node":">=0.10.36"},"license":"MIT"};
 
 /***/ })
 /******/ ])["default"];
